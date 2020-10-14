@@ -121,6 +121,8 @@ class CoilTest : ScreenshotTest {
             assertThat(results).hasSize(1)
             assertThat(results[0]).isInstanceOf(ImageLoadState.Success::class.java)
         }
+
+        compareScreenshot(composeTestRule)
     }
 
     @Test
@@ -262,7 +264,7 @@ class CoilTest : ScreenshotTest {
             .assertHeightIsEqualTo(128.dp)
             .assertIsDisplayed()
 
-        compareScreenshot(composeTestRule)
+        compareScreenshotWithSuffix(composeTestRule, "_pre")
 
         // Now switch the data URI to the blue drawable
         drawableResId.value = R.drawable.blue_rectangle
@@ -280,7 +282,7 @@ class CoilTest : ScreenshotTest {
             .assertHeightIsEqualTo(128.dp)
             .assertIsDisplayed()
 
-        compareScreenshot(composeTestRule)
+        compareScreenshotWithSuffix(composeTestRule, "_post")
 
         // Close the signal channel
         loadCompleteSignal.close()
@@ -306,7 +308,7 @@ class CoilTest : ScreenshotTest {
             loadCompleteSignal.receive()
         }
 
-        compareScreenshot(composeTestRule)
+        compareScreenshotWithSuffix(composeTestRule, "_pre")
 
         // Now change the size
         sizeFlow.value = 256.dp
@@ -317,7 +319,7 @@ class CoilTest : ScreenshotTest {
             assertThat(result).isNull()
         }
 
-        compareScreenshot(composeTestRule)
+        compareScreenshotWithSuffix(composeTestRule, "_post")
 
         // Close the signal channel
         loadCompleteSignal.close()
@@ -478,7 +480,7 @@ class CoilTest : ScreenshotTest {
             // Assert that the loading component is displayed
             composeTestRule.onNodeWithText("Loading").assertIsDisplayed()
 
-            compareScreenshot(composeTestRule)
+            compareScreenshotWithSuffix(composeTestRule, "_loading")
 
             // Now resume the dispatcher to start the Coil request
             dispatcher.resumeDispatcher()
@@ -490,7 +492,7 @@ class CoilTest : ScreenshotTest {
         // And assert that the loading component no longer exists
         composeTestRule.onNodeWithText("Loading").assertDoesNotExist()
 
-        compareScreenshot(composeTestRule)
+        compareScreenshotWithSuffix(composeTestRule, "_loaded")
     }
 
     @Test
@@ -515,7 +517,7 @@ class CoilTest : ScreenshotTest {
 
         // Assert that the whole layout is drawn red
         composeTestRule.onNodeWithTag(CoilTestTags.Image)
-                .assertIsDisplayed()
+            .assertIsDisplayed()
 
         compareScreenshot(composeTestRule)
     }
