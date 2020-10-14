@@ -16,12 +16,16 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="dev.chrisbanes.accompanist.coil.test">
+    package="dev.chrisbanes.accompanist.coil.test"
+    android:sharedUserId="dev.chrisbanes.accompanist.coil.uid">
 
     <uses-sdk android:targetSdkVersion="30" />
 
     <!-- Needed for MockWebServer -->
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Needed for screenshot testing -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <!-- usesCleartextTraffic=true because we use MockWebServer -->
     <application

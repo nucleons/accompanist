@@ -50,6 +50,7 @@ import coil.fetch.Fetcher
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.google.common.truth.Truth.assertThat
+import com.karumi.shot.ScreenshotTest
 import dev.chrisbanes.accompanist.coil.test.R
 import dev.chrisbanes.accompanist.imageloading.ImageLoadState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -77,7 +78,7 @@ import java.util.concurrent.TimeUnit
 
 @LargeTest
 @RunWith(JUnit4::class)
-class CoilTest {
+class CoilTest : ScreenshotTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -146,6 +147,8 @@ class CoilTest {
             assertThat(results).hasSize(1)
             assertThat(results[0]).isInstanceOf(ImageLoadState.Success::class.java)
         }
+
+        compareScreenshot(composeTestRule)
     }
 
     @Test
@@ -167,6 +170,8 @@ class CoilTest {
             .assertIsDisplayed()
             .assertWidthIsEqualTo(128.dp)
             .assertHeightIsEqualTo(128.dp)
+
+        compareScreenshot(composeTestRule)
     }
 
     @Test
@@ -189,8 +194,8 @@ class CoilTest {
             .assertWidthIsEqualTo(128.dp)
             .assertHeightIsEqualTo(128.dp)
             .assertIsDisplayed()
-            .captureToBitmap()
-            .assertPixels { Color.Red }
+
+        compareScreenshot(composeTestRule)
     }
 
     @OptIn(ExperimentalCoilApi::class)
@@ -256,8 +261,8 @@ class CoilTest {
             .assertWidthIsEqualTo(128.dp)
             .assertHeightIsEqualTo(128.dp)
             .assertIsDisplayed()
-            .captureToBitmap()
-            .assertPixels { Color.Red }
+
+        compareScreenshot(composeTestRule)
 
         // Now switch the data URI to the blue drawable
         drawableResId.value = R.drawable.blue_rectangle
@@ -274,8 +279,8 @@ class CoilTest {
             .assertWidthIsEqualTo(128.dp)
             .assertHeightIsEqualTo(128.dp)
             .assertIsDisplayed()
-            .captureToBitmap()
-            .assertPixels { Color.Blue }
+
+        compareScreenshot(composeTestRule)
 
         // Close the signal channel
         loadCompleteSignal.close()
@@ -301,6 +306,8 @@ class CoilTest {
             loadCompleteSignal.receive()
         }
 
+        compareScreenshot(composeTestRule)
+
         // Now change the size
         sizeFlow.value = 256.dp
 
@@ -309,6 +316,8 @@ class CoilTest {
             val result = withTimeoutOrNull(3000) { loadCompleteSignal.receive() }
             assertThat(result).isNull()
         }
+
+        compareScreenshot(composeTestRule)
 
         // Close the signal channel
         loadCompleteSignal.close()
@@ -469,6 +478,8 @@ class CoilTest {
             // Assert that the loading component is displayed
             composeTestRule.onNodeWithText("Loading").assertIsDisplayed()
 
+            compareScreenshot(composeTestRule)
+
             // Now resume the dispatcher to start the Coil request
             dispatcher.resumeDispatcher()
         }
@@ -478,6 +489,8 @@ class CoilTest {
 
         // And assert that the loading component no longer exists
         composeTestRule.onNodeWithText("Loading").assertDoesNotExist()
+
+        compareScreenshot(composeTestRule)
     }
 
     @Test
@@ -502,9 +515,9 @@ class CoilTest {
 
         // Assert that the whole layout is drawn red
         composeTestRule.onNodeWithTag(CoilTestTags.Image)
-            .assertIsDisplayed()
-            .captureToBitmap()
-            .assertPixels { Color.Red }
+                .assertIsDisplayed()
+
+        compareScreenshot(composeTestRule)
     }
 }
 
