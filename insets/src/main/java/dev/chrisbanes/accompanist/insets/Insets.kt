@@ -136,7 +136,7 @@ class Insets {
 }
 
 val AmbientWindowInsets = staticAmbientOf<WindowInsets> {
-    error("AmbientInsets value not available. Are you using ProvideWindowInsets?")
+    error("AmbientWindowInsets value not available. Are you using ProvideWindowInsets?")
 }
 
 /**
@@ -145,10 +145,13 @@ val AmbientWindowInsets = staticAmbientOf<WindowInsets> {
  *
  * @param consumeWindowInsets Whether to consume any [WindowInsetsCompat]s which are dispatched to
  * the host view. Defaults to `true`.
+ * @param windowInsetsAnimationsEnabled Whether to listen for [WindowInsetsAnimation]s, such as
+ * IME animations. Defaults to `true`.
  */
 @Composable
 fun ProvideWindowInsets(
     consumeWindowInsets: Boolean = true,
+    windowInsetsAnimationsEnabled: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val view = ViewAmbient.current
@@ -195,39 +198,13 @@ fun ProvideWindowInsets(
         }
         view.addOnAttachStateChangeListener(attachListener)
 
+        if (Build.VERSION.SDK_INT >= 30 && windowInsetsAnimationsEnabled) {
+            InnerWindowInsetsAnimationCallback.setup(view, windowInsets)
+        }
+
         if (view.isAttachedToWindow) {
             // If the view is already attached, we can request an inset pass now
             view.requestApplyInsets()
-        }
-
-        if (Build.VERSION.SDK_INT >= 30) {
-            view.setWindowInsetsAnimationCallback(
-                object : WindowInsetsAnimation.Callback(DISPATCH_MODE_STOP) {
-                    override fun onPrepare(animation: WindowInsetsAnimation) {
-                        if (animation.typeMask and WindowInsetsPlatform.Type.ime() != 0) {
-                            windowInsets.ime.ongoingAnimations++
-                        }
-                        // TODO add rest of types
-                    }
-
-                    override fun onProgress(
-                        insets: android.view.WindowInsets,
-                        runningAnimations: MutableList<WindowInsetsAnimation>
-                    ): android.view.WindowInsets {
-                        windowInsets.ime.updateFrom(insets, WindowInsetsPlatform.Type.ime())
-                        // TODO add rest of types
-
-                        return insets
-                    }
-
-                    override fun onEnd(animation: WindowInsetsAnimation) {
-                        if (animation.typeMask and WindowInsetsPlatform.Type.ime() != 0) {
-                            windowInsets.ime.ongoingAnimations--
-                        }
-                        // TODO add rest of types
-                    }
-                }
-            )
         }
 
         onDispose {
@@ -237,6 +214,45 @@ fun ProvideWindowInsets(
 
     Providers(AmbientWindowInsets provides windowInsets) {
         content()
+    }
+}
+
+@RequiresApi(30)
+private class InnerWindowInsetsAnimationCallback(
+    private val windowInsets: WindowInsets,
+) : WindowInsetsAnimation.Callback(DISPATCH_MODE_STOP) {
+    override fun onPrepare(animation: WindowInsetsAnimation) {
+        if (animation.typeMask and WindowInsetsPlatform.Type.ime() != 0) {
+            windowInsets.ime.ongoingAnimations++
+        }
+        // TODO add rest of types
+    }
+
+    override fun onProgress(
+        insets: WindowInsetsPlatform,
+        runningAnimations: MutableList<WindowInsetsAnimation>
+    ): WindowInsetsPlatform {
+        windowInsets.ime.updateFrom(insets, WindowInsetsPlatform.Type.ime())
+        // TODO add rest of types
+
+        return insets
+    }
+
+    override fun onEnd(animation: WindowInsetsAnimation) {
+        if (animation.typeMask and WindowInsetsPlatform.Type.ime() != 0) {
+            windowInsets.ime.ongoingAnimations--
+        }
+        // TODO add rest of types
+    }
+
+    companion object {
+        /**
+         * This function may look useless, but this keeps the API 30 method call in a
+         * separate class, which makes class loaders on older platforms happy.
+         */
+        fun setup(view: View, windowInsets: WindowInsets) {
+            view.setWindowInsetsAnimationCallback(InnerWindowInsetsAnimationCallback(windowInsets))
+        }
     }
 }
 
